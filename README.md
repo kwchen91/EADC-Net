@@ -1,110 +1,85 @@
-# EADC-Net (Public Code-Only Release)
-End-to-end pipeline for lumbar spine **ROI segmentation** and **vertebra detection** on X-ray images.
+# EADC-Net (Code-Only Release)
 
-This repository is **code-only**: no medical images, labels or weights are included due to privacy and licensing.
-For full reproducibility, I provide a small **synthetic** dataset generator so anyone can train/evaluate end-to-end without real data.
+End-to-end pipeline for lumbar spine **ROI segmentation** + **vertebra detection** on X-rays.  
+Code only, no medical images, labels, or weights (privacy / licensing).  
+For testing, a small **synthetic generator** is included so you can run the full pipeline.
 
 ---
 
-## Project structure
-
-src/
-data/ # dataset loaders (seg/det) and collate
-models/ # UNet-like segmentation, torchvision Faster R-CNN detection
-utils/ # augmentations, metrics (Dice/HD95/AUPRC/ECE), Grad-CAM helpers
-losses.py
-configs/
-segmentation.yaml
-detection.yaml
-tools/
-make_synthetic_toy.py # create tiny non-PHI dataset
-normalize_seg_filenames.py # housekeeping utils
-check_pairs.py
-vis_det_debug.py
-train.py
-eval.py
+## Project layout
+src/ core code (seg/det loaders, collate, utils)
+models/ UNet-like seg, torchvision Faster R-CNN det
+utils/ augment, metrics (Dice/HD95/AUPRC/ECE), Grad-CAM
+losses.py loss funcs
+configs/ YAML configs
+tools/ toy data gen + small scripts
+train.py training loop
+eval.py eval loop
 requirements.txt
 
 ---
 
-## Installation
-
+## Install
 ```bash
 conda create -n eadcnet python=3.10 -y
 conda activate eadcnet
 pip install -r requirements.txt
-GPU is recommended but CPU works for the toy runs.
+GPU recommended, but CPU works for toy runs.
 
----
+Data
+Two options:
 
-Data (two options)
-A) Generate synthetic toy data (recommended for quick start)
+A. Toy data (quick start)
 python tools/make_synthetic_toy.py --out data --num 40 --img-size 512
-This creates:
+
+Creates:
 data/
-  seg/
-    images/*.png
-    masks/*.png
-  det/
-    images/*.png
-    labels.csv
-    labels/*.txt
+  seg/images + seg/masks
+  det/images + det/labels.csv (or YOLO .txt)
 
-B) Use your own anonymized data
-Match the same layout: for segmentation use seg/images + seg/masks (same file names),
-for detection use det/images + det/labels.csv (or YOLO det/labels/*.txt).
+B. Own data (if you have anonymized X-rays)
+Follow the same folder layout as above.
 
-```
-
-## Training
-Segmentation
+Training
+Seg:
 python train.py --task seg --config configs/segmentation.yaml
 
-Detection
+Det:
 python train.py --task det --config configs/detection.yaml
-Both tasks support K-fold (configured in YAML).
 
----
+Supports K-fold (set in YAML).
 
-## Evaluation
-Segmentation
+Evaluation
+Seg:
 python eval.py --task seg --config configs/segmentation.yaml --ckpt runs/seg/best.pt
 
-Detection
+Det:
 python eval.py --task det --config configs/detection.yaml --ckpt runs/det/best.pt --score-thr 0.05
-Reports Dice/HD95/AUPRC/ECE for segmentation, and val loss + mAP@0.5 for detection.
 
----
+Outputs:
+Seg → Dice (main metric)
+Det → val loss + mAP@0.5
 
-## Visualizations
--Loss curves and qualitative overlays are saved under runs/<task>/
--tools/vis_det_debug.py overlays detection results for quick inspection.
--Grad-CAM utilities are available under src/utils/gradcam.py.
+Curves + overlays → runs/<task>/
+Quick check: tools/vis_det_debug.py (for detection) or overlay PNGs (for seg).
+```
 
----
+## Viz
+Loss curves + overlays auto-saved under runs/
+Grad-CAM helpers in src/utils/gradcam.py
 
-## Key technical choices
--Losses (seg): BCE + Dice (weights in YAML).
--Metrics: Dice / AUPRC / HD95 / ECE.
--Augmentation: conservative geometric + intensity jitters via utils/augment.py.
--Class imbalance (det): single-class with loss-driven training; sampler/weighting can be enabled if needed.
--Reproducibility: fixed seeds in YAML; synthetic generator also uses deterministic seeds.
+## Notes
+Loss: BCE + Dice (weights in YAML)
+Metrics: Dice / AUPRC / HD95 / ECE
+Augmentation: flips + small intensity jitter
+Class imbalance (det): single class → sampler exists but rarely needed
+Reproducibility: fixed seeds everywhere (also toy gen)
 
----
+Toy run (~40 imgs, 10 epochs) → Dice ~0.72.
+Not fancy — edges are messy early but improve with training.
 
-## Training Curves
-
-Segmentation (Dice validation per epoch):
-![Segmentation Curve](runs/seg/curve.png)
-
-Detection (Validation loss per epoch):
-![Detection Curve](runs/det/curve.png)
-
-
-### Example Segmentation Output
-Example overlay on synthetic toy data (green = predicted mask, gray = input X-ray):
-
+## Example
+Synthetic overlay (green = mask, gray = input):
 ![Overlay Example](runs/seg/example_overlay.png)
 
-On the toy dataset (~40 images), training for 10 epochs yields Dice ≈ 0.72. 
-Boundary artifacts are common at early epochs but reduce with longer training. 
+ 
