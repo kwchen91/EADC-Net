@@ -1,0 +1,26 @@
+seed: 42
+device: auto
+
+data:
+  root: ./data/det
+  img_dir: images
+  labels_csv: labels.csv    
+  yolo_dir: labels
+  img_size: [512, 512]
+  folds: 5
+
+training:
+  epochs: 15
+  batch_size: 2
+  lr: 0.0005
+  weight_decay: 0.0001
+  num_workers: 0
+  save_dir: runs/det
+
+model:
+  name: fasterrcnn_resnet50_fpn
+  num_classes: 2
+
+eval:
+  iou_threshold: 0.5
+

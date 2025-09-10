@@ -1,0 +1,59 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+.env
+data/
+runs/
+outputs/
+*.pt
+*.pth
+*.h5
+*.ckpt
+.ipynb_checkpoints/
+*.ipynb
+.DS_Store
+Thumbs.db
+
+
+# Outputs / checkpoints / weights
+runs/*
+!runs/det/curve/
+!runs/det/curve/curve.png
+!runs/seg/curve/
+!runs/seg/curve/curve.png
+outputs/
+*.pt
+*.pth
+*.hdf5
+
+# Data (never commit real data)
+data/
+toy_seg/
+toy_det/
+Original/
+Enhanced/
+Mask/
+Segmentation_Output/
+Preprocessing/
+ROI_Train/
+ROI_Test/
+Detection_Output/
+Train/
+Test/
+
+# Logs
+*.log
+logs/
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb
+
+# IDE / OS junk
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+!runs/seg/example_overlay.png
